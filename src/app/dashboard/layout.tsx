@@ -3,18 +3,16 @@ import { getSessionContext } from "@/lib/familia";
 import { getHijos } from "@/lib/hijos";
 import { logout } from "@/app/login/actions";
 import { rolLabels } from "@/lib/supabase/types";
+import { SidebarNavLink, BottomNavLink } from "@/components/NavLink";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { miembro, familia } = await getSessionContext();
   const hijos = await getHijos(familia.id);
   const isViewer = miembro.permiso === "lector";
 
-  // El Panel admin es visible para cualquier miembro logueado desde el
-  // móvil o el desktop; dentro de él, las acciones sensibles (familia y
-  // miembros) quedan restringidas al owner — ver /dashboard/admin/*.
   const navItems = [
     { href: "/dashboard", label: "Inicio", icon: "🏠" },
-     { href: "/dashboard/historial", label: "Historial", icon: "📜" },
+    { href: "/dashboard/historial", label: "Historial", icon: "📜" },
     ...(isViewer ? [] : [{ href: "/dashboard/padres", label: "Padres", icon: "🧑‍🧑‍🧒" }]),
     { href: "/dashboard/semana", label: "Semana", icon: "📊" },
     ...(isViewer ? [] : [{ href: "/dashboard/chat", label: "Chat IA", icon: "💬" }]),
@@ -30,14 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <p className="text-xs text-slate-500 dark:text-slate-400">{familia.nombre}</p>
         </div>
         {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="px-3 py-2 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
-            <span className="mr-2">{item.icon}</span>
-            {item.label}
-          </Link>
+          <SidebarNavLink key={item.href} href={item.href} icon={item.icon} label={item.label} />
         ))}
         <div className="mt-auto pt-4 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
           <p className="font-medium text-slate-700 dark:text-slate-200">{miembro.nombre}</p>
@@ -52,7 +43,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="flex-1 flex flex-col min-h-dvh">
         {/* Header móvil */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
+        <header
+          className="md:hidden flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800"
+          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        >
           <div>
             <p className="font-semibold text-slate-800 dark:text-slate-100 text-sm">🍼 {familia.nombre}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
@@ -84,16 +78,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <main className="flex-1 p-4 pb-24 md:pb-6 w-full max-w-2xl mx-auto md:mx-0 md:max-w-3xl">{children}</main>
 
         {/* Nav inferior móvil */}
-        <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around py-2">
+        <nav
+          className="md:hidden fixed bottom-0 inset-x-0 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex justify-around py-2"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+        >
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex flex-col items-center text-[10px] gap-0.5 px-2 py-1 text-slate-500 dark:text-slate-400"
-            >
-              <span className="text-lg">{item.icon}</span>
-              {item.label}
-            </Link>
+            <BottomNavLink key={item.href} href={item.href} icon={item.icon} label={item.label} />
           ))}
         </nav>
       </div>

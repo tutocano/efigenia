@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const [supabase] = useState(() => createClient());
   const [ready, setReady] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
   const [password, setPassword] = useState("");
@@ -14,8 +15,23 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
+  // Al llegar aquí, la sesión ya debería estar establecida por la ruta
+  // /auth/confirm (verifica el enlace en el servidor y guarda la sesión en
+  // una cookie normal antes de redirigir para acá). Aquí solo confirmamos
+  // que la sesión exista. Se dejan un par de casos de respaldo por si llega
+  // un enlace de un formato viejo (correo enviado antes de este cambio).
   useEffect(() => {
+    const url = new URL(window.location.href);
+    const errorParam = url.searchParams.get("error");
+    const code = url.searchParams.get("code");
     const hash = window.location.hash;
+
+    if (errorParam) {
+      setLinkError(errorParam);
+      setReady(true);
+      return;
+    }
+
     if (hash.includes("error=")) {
       const params = new URLSearchParams(hash.slice(1));
       setLinkError(
@@ -26,20 +42,46 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    const supabase = createClient();
-    supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "PASSWORD_RECOVERY" && session) {
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setLinkError(
+            "Este enlace se abrió en una app/navegador distinto al que lo pidió. Pide uno nuevo y ábrelo tocando 'Abrir en Safari' (o tu navegador) en vez de dejarlo abrir dentro de la app de correo."
+          );
+        }
         setReady(true);
+      });
+      return;
+    }
+
+    let cancelled = false;
+
+    async function checkSession() {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (data.session) {
+        setReady(true);
+        return;
       }
-    });
+      setTimeout(async () => {
+        const retry = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (retry.data.session) {
+          setReady(true);
+        } else {
+          setLinkError(
+            "No encontramos una sesión activa para este enlace. Pide uno nuevo y ábrelo apenas te llegue."
+          );
+          setReady(true);
+        }
+      }, 1200);
+    }
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true);
-    });
-
-    const timeout = setTimeout(() => setReady(true), 2500);
-    return () => clearTimeout(timeout);
-  }, []);
+    checkSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +95,6 @@ export default function ResetPasswordPage() {
     }
     setPending(true);
     setError(null);
-    const supabase = createClient();
     const { error } = await supabase.auth.updateUser({ password });
     setPending(false);
     if (error) {

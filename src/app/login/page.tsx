@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -48,13 +49,9 @@ export default function LoginPage() {
           {state?.error && <p className="text-xs text-rose-500">{state.error}</p>}
           <SubmitButton />
         </form>
-	<p className="text-xs text-slate-400 text-center mt-3">
-          <Link href="/forgot-password" className="text-indigo-600 dark:text-indigo-400 font-		medium">
-            ¿Olvidaste tu contraseña?
-          </Link>
-        </p>
-	<p className="text-xs text-slate-400 text-center mt-3">
-          <Link href="/forgot-password" className="text-indigo-600 dark:text-indigo-400 font-		medium">
+
+        <p className="text-xs text-slate-400 text-center mt-3">
+          <Link href="/forgot-password" className="text-indigo-600 dark:text-indigo-400 font-medium">
             ¿Olvidaste tu contraseña?
           </Link>
         </p>
