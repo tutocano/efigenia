@@ -26,12 +26,14 @@ on conflict (id) do nothing;
 -- Solo miembros con permiso "editor" de la familia dueña de la carpeta
 -- (primer segmento de la ruta = familia_id) pueden subir o borrar fotos.
 -- Reusa la función my_permiso(fid) ya definida en 0001_init.sql.
+drop policy if exists fotos_insert on storage.objects;
 create policy fotos_insert on storage.objects
   for insert with check (
     bucket_id = 'fotos-registros'
     and my_permiso((storage.foldername(name))[1]::uuid) = 'editor'
   );
 
+drop policy if exists fotos_delete on storage.objects;
 create policy fotos_delete on storage.objects
   for delete using (
     bucket_id = 'fotos-registros'

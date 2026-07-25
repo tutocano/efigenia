@@ -69,7 +69,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 href={`?hijo=${h.id}`}
                 className="shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
               >
-                {h.sexo === "masculino" ? "👦" : "👧"} {h.nombre}
+                {h.sexo === "masculino" ? "👦" : h.sexo === "femenino" ? "👧" : "🤰"} {h.nombre}
               </Link>
             ))}
           </div>
