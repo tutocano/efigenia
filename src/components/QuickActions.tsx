@@ -10,9 +10,14 @@ type Modal = "comida" | "panal" | "llanto" | "malestar" | null;
 export default function QuickActions({
   hijoId,
   preguntasRapidas = [],
+  mostrarAccionesBebe = true,
 }: {
   hijoId: string;
   preguntasRapidas?: PreguntaDinamica[];
+  // false mientras el hijo está en gestación: las 6 acciones fijas de bebé
+  // (siesta, comida, pañal, llanto, malestar, juego) no aplican todavía.
+  // Las acciones de embarazo/madre llegan como preguntasRapidas dinámicas.
+  mostrarAccionesBebe?: boolean;
 }) {
   const [siestaStart, setSiestaStart] = useState<number | null>(null);
   const [modal, setModal] = useState<Modal>(null);
@@ -59,47 +64,51 @@ export default function QuickActions({
   return (
     <div>
       <div className="grid grid-cols-3 gap-3">
-        <button
-          onClick={toggleSiesta}
-          className={`flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl border text-[11px] font-medium text-center leading-tight px-1 ${
-            siestaStart
-              ? "bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-300 border-red-200 dark:border-red-900"
-              : "bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900"
-          }`}
-        >
-          <span className="text-2xl">😴</span>
-          {siestaStart ? "Durmiendo… toca al despertar" : "Empezó siesta"}
-        </button>
-        <button
-          onClick={() => setModal("comida")}
-          className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900 text-[11px] font-medium"
-        >
-          <span className="text-2xl">🍼</span>Comida
-        </button>
-        <button
-          onClick={() => setModal("panal")}
-          className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-900 text-[11px] font-medium"
-        >
-          <span className="text-2xl">🧷</span>Pañal
-        </button>
-        <button
-          onClick={() => setModal("llanto")}
-          className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900 text-[11px] font-medium"
-        >
-          <span className="text-2xl">😢</span>Llanto
-        </button>
-        <button
-          onClick={() => setModal("malestar")}
-          className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300 border border-orange-100 dark:border-orange-900 text-[11px] font-medium"
-        >
-          <span className="text-2xl">🌡️</span>Malestar
-        </button>
-        <button
-          onClick={() => log("animo", { tummy_time: true })}
-          className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900 text-[11px] font-medium"
-        >
-          <span className="text-2xl">🧸</span>Juego / tummy time
-        </button>
+        {mostrarAccionesBebe && (
+          <>
+            <button
+              onClick={toggleSiesta}
+              className={`flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl border text-[11px] font-medium text-center leading-tight px-1 ${
+                siestaStart
+                  ? "bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-300 border-red-200 dark:border-red-900"
+                  : "bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-900"
+              }`}
+            >
+              <span className="text-2xl">😴</span>
+              {siestaStart ? "Durmiendo… toca al despertar" : "Empezó siesta"}
+            </button>
+            <button
+              onClick={() => setModal("comida")}
+              className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900 text-[11px] font-medium"
+            >
+              <span className="text-2xl">🍼</span>Comida
+            </button>
+            <button
+              onClick={() => setModal("panal")}
+              className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-900 text-[11px] font-medium"
+            >
+              <span className="text-2xl">🧷</span>Pañal
+            </button>
+            <button
+              onClick={() => setModal("llanto")}
+              className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900 text-[11px] font-medium"
+            >
+              <span className="text-2xl">😢</span>Llanto
+            </button>
+            <button
+              onClick={() => setModal("malestar")}
+              className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-orange-50 dark:bg-orange-950 text-orange-700 dark:text-orange-300 border border-orange-100 dark:border-orange-900 text-[11px] font-medium"
+            >
+              <span className="text-2xl">🌡️</span>Malestar
+            </button>
+            <button
+              onClick={() => log("animo", { tummy_time: true })}
+              className="flex flex-col items-center justify-center gap-1 aspect-square rounded-3xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900 text-[11px] font-medium"
+            >
+              <span className="text-2xl">🧸</span>Juego / tummy time
+            </button>
+          </>
+        )}
         {preguntasRapidas.map((p) => (
           <button
             key={p.id}
@@ -111,6 +120,12 @@ export default function QuickActions({
           </button>
         ))}
       </div>
+      {!mostrarAccionesBebe && preguntasRapidas.length === 0 && (
+        <p className="text-xs text-slate-400 mt-2">
+          Todavía no hay acciones rápidas de embarazo configuradas. Agrégalas en Panel admin → Preguntas
+          (categoría &quot;Embarazo&quot;, marcadas como acción rápida).
+        </p>
+      )}
 
       {modal && (
         <div

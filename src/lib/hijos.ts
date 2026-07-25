@@ -12,18 +12,8 @@ export async function getHijos(familiaId: string): Promise<Hijo[]> {
   return (data ?? []) as Hijo[];
 }
 
-export function pickActiveChild(hijos: Hijo[], hijoIdParam?: string): Hijo | null {
-  if (hijoIdParam) {
-    const found = hijos.find((h) => h.id === hijoIdParam);
-    if (found) return found;
-  }
-  return hijos[0] ?? null;
-}
-
-export function edadTexto(fechaISO: string): string {
-  const dias = Math.floor((Date.now() - new Date(fechaISO).getTime()) / 86400000);
-  if (dias < 0) return "recién nacido";
-  const meses = Math.floor(dias / 30);
-  const diasRest = dias % 30;
-  return meses > 0 ? `${meses} meses, ${diasRest} días` : `${dias} días`;
-}
+// Re-exporta las funciones puras (sin dependencias de servidor) para que el
+// resto del código siga pudiendo importarlas desde "@/lib/hijos" como antes.
+// Los componentes de CLIENTE deben importarlas directo desde "@/lib/hijoEstado"
+// en vez de este archivo, para no arrastrar el cliente de Supabase de servidor.
+export { pickActiveChild, edadTexto, estaEnGestacion, estadoTexto } from "./hijoEstado";

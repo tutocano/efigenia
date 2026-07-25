@@ -38,6 +38,17 @@ interface ItemHistorial {
   texto: string;
   autor: string | null;
   fotoUrl?: string | null;
+  etiqueta: string;
+}
+
+// Lunes de la semana calendario a la que pertenece `fecha` (para agrupar).
+function inicioDeSemana(fecha: Date): Date {
+  const d = new Date(fecha);
+  const dia = d.getDay(); // 0 = domingo … 6 = sábado
+  const diff = (dia === 0 ? -6 : 1) - dia; // retrocede hasta el lunes
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 export default async function HistorialPage({
@@ -76,9 +87,9 @@ export default async function HistorialPage({
     .from("respuestas_preguntas")
     .select("*, preguntas_dinamicas!inner(texto, icono, tipo_entrada, categoria), miembros_familia(nombre)")
     .eq("hijo_id", hijo.id)
-    .eq("preguntas_dinamicas.categoria", "bebe")
+    .in("preguntas_dinamicas.categoria", ["bebe", "embarazo", "madre"])
     .order("respondido_en", { ascending: false })
-    .limit(100);
+    .limit(150);
 
   const itemsRegistros: ItemHistorial[] = (registros ?? []).map((r: any) => ({
     id: `registro-${r.id}`,
@@ -88,7 +99,14 @@ export default async function HistorialPage({
     icono: iconosRegistro[r.tipo] ?? "📝",
     texto: resumenRegistro(r.tipo, r.detalle),
     autor: r.miembros_familia?.nombre ?? null,
+    etiqueta: "Bebé",
   }));
+
+  const etiquetaPorCategoria: Record<string, string> = {
+    bebe: "Bebé",
+    embarazo: "Bebé en gestación",
+    madre: "Madre",
+  };
 
   const itemsRespuestas: ItemHistorial[] = (respuestas ?? []).map((r: any) => {
     const pregunta = r.preguntas_dinamicas;
@@ -103,6 +121,7 @@ export default async function HistorialPage({
       texto: esFoto ? pregunta?.texto ?? "Foto" : `${pregunta?.texto ?? "Pregunta"}: ${valor}`,
       autor: r.miembros_familia?.nombre ?? null,
       fotoUrl: esFoto ? r.valor : null,
+      etiqueta: etiquetaPorCategoria[pregunta?.categoria] ?? "Bebé",
     };
   });
 
@@ -110,23 +129,20 @@ export default async function HistorialPage({
     (a, b) => new Date(b.momento).getTime() - new Date(a.momento).getTime()
   );
 
-  // Agrupa por día (fecha local) conservando el orden ya descendente.
+  // Agrupa por semana calendario (lunes a domingo) para que el historial no
+  // quede demasiado largo, conservando el orden ya descendente.
+  const claveSemanaActual = inicioDeSemana(new Date()).toLocaleDateString("en-CA");
   const grupos: { clave: string; etiqueta: string; items: ItemHistorial[] }[] = [];
   for (const item of items) {
-    const fecha = new Date(item.momento);
-    const clave = fecha.toLocaleDateString("en-CA"); // YYYY-MM-DD, estable para agrupar
+    const inicio = inicioDeSemana(new Date(item.momento));
+    const clave = inicio.toLocaleDateString("en-CA"); // YYYY-MM-DD del lunes, estable para agrupar
     let grupo = grupos.find((g) => g.clave === clave);
     if (!grupo) {
-      let etiqueta = fecha.toLocaleDateString("es-CO", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      });
-      etiqueta = etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1);
-      const hoy = new Date().toLocaleDateString("en-CA");
-      const ayer = new Date(Date.now() - 86400000).toLocaleDateString("en-CA");
-      if (clave === hoy) etiqueta = `Hoy · ${etiqueta}`;
-      else if (clave === ayer) etiqueta = `Ayer · ${etiqueta}`;
+      const fin = new Date(inicio);
+      fin.setDate(fin.getDate() + 6);
+      const formatoCorto = (d: Date) => d.toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+      let etiqueta = `Semana del ${formatoCorto(inicio)} al ${formatoCorto(fin)}`;
+      if (clave === claveSemanaActual) etiqueta = `Esta semana · ${etiqueta}`;
       grupo = { clave, etiqueta, items: [] };
       grupos.push(grupo);
     }
@@ -138,7 +154,7 @@ export default async function HistorialPage({
       <div>
         <p className="font-semibold text-slate-800 dark:text-slate-100">Historial de {hijo.nombre}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Acciones rápidas y respuestas a preguntas de categoría &quot;Bebé&quot;, todo junto y en orden.
+          Todo junto y en orden, agrupado por semana: bebé, bebé en gestación y madre.
         </p>
       </div>
 
@@ -157,6 +173,7 @@ export default async function HistorialPage({
                 autor={item.autor}
                 canDelete={canDelete}
                 fotoUrl={item.fotoUrl}
+                etiqueta={item.etiqueta}
               />
             ))}
           </div>

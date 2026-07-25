@@ -5,7 +5,13 @@
 
 export type RolFamiliar = "padre_madre_1" | "padre_madre_2" | "cuidador" | "familiar" | "superadmin";
 export type PermisoFamiliar = "editor" | "lector";
-export type CategoriaPregunta = "bebe" | "padre_madre_1" | "padre_madre_2" | "general";
+export type CategoriaPregunta =
+  | "bebe"
+  | "padre_madre_1"
+  | "padre_madre_2"
+  | "general"
+  | "embarazo"
+  | "madre";
 export type TipoEntrada = "texto" | "toggle" | "seleccion_unica" | "numero" | "timer" | "escala_1_5" | "foto";
 export type TipoRegistro = "sueno" | "alimentacion" | "panal" | "salud" | "animo";
 
@@ -34,7 +40,14 @@ export interface Hijo {
   id: string;
   familia_id: string;
   nombre: string;
-  fecha_nacimiento: string;
+  // null mientras el hijo está en gestación; se llena al registrar el nacimiento.
+  fecha_nacimiento: string | null;
+  // Fecha en la que la familia empezó a usar la app para este hijo (antes se
+  // pedía como "fecha de nacimiento" al crear el registro).
+  fecha_inicio_seguimiento: string;
+  // Fecha probable de parto (FPP), solo mientras está en gestación. Se
+  // conserva como dato histórico después de que nace.
+  fecha_probable_parto: string | null;
   sexo: "masculino" | "femenino" | "prefiero_no_decir";
   avatar_url: string | null;
   notas_salud: string | null;
@@ -122,6 +135,8 @@ export const categoriaLabels: Record<CategoriaPregunta, string> = {
   padre_madre_1: "Padre/Madre 1",
   padre_madre_2: "Padre/Madre 2",
   general: "General",
+  embarazo: "Embarazo (bebé sin nacer)",
+  madre: "Madre",
 };
 
 export const tipoEntradaLabels: Record<TipoEntrada, string> = {

@@ -12,6 +12,7 @@ export default function HistorialRow({
   autor,
   canDelete,
   fotoUrl,
+  etiqueta,
 }: {
   kind: "registro" | "respuesta";
   rawId: string;
@@ -21,6 +22,7 @@ export default function HistorialRow({
   autor: string | null;
   canDelete: boolean;
   fotoUrl?: string | null;
+  etiqueta?: string;
 }) {
   const [pending, startTransition] = useTransition();
   const [ampliar, setAmpliar] = useState(false);
@@ -34,6 +36,13 @@ export default function HistorialRow({
   }
 
   const hora = new Date(momento).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+  const fechaCorta = new Date(momento).toLocaleDateString("es-CO", { day: "numeric", month: "short" });
+
+  const colorEtiqueta: Record<string, string> = {
+    Madre: "bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300",
+    "Bebé en gestación": "bg-violet-100 dark:bg-violet-900 text-violet-700 dark:text-violet-300",
+    Bebé: "bg-sky-100 dark:bg-sky-900 text-sky-700 dark:text-sky-300",
+  };
 
   return (
     <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
@@ -50,9 +59,14 @@ export default function HistorialRow({
         <span className="text-lg">{icono}</span>
       )}
       <div className="flex-1">
+        {etiqueta && (
+          <span className={`inline-block text-[9px] font-medium px-1.5 py-0.5 rounded-full mb-0.5 ${colorEtiqueta[etiqueta] ?? "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"}`}>
+            {etiqueta}
+          </span>
+        )}
         <p className="text-xs text-slate-700 dark:text-slate-200">{texto}</p>
         <p className="text-[10px] text-slate-400">
-          {hora}
+          {fechaCorta} · {hora}
           {autor ? ` · ${autor}` : ""}
         </p>
       </div>

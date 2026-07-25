@@ -123,13 +123,21 @@ export async function eliminarMiembro(id: string) {
 // ------------------------------------------------------------------
 // HIJOS (cualquier miembro con permiso "editor")
 // ------------------------------------------------------------------
-export async function crearHijo(input: { nombre: string; fechaNacimiento: string; sexo: string }) {
+export async function crearHijo(input: {
+  nombre: string;
+  fechaInicioSeguimiento: string;
+  fechaProbableParto?: string;
+  fechaNacimiento?: string;
+  sexo: string;
+}) {
   const { familia } = await requireEditor();
   const supabase = await createClient();
   const { error } = await supabase.from("hijos").insert({
     familia_id: familia.id,
     nombre: input.nombre,
-    fecha_nacimiento: input.fechaNacimiento,
+    fecha_inicio_seguimiento: input.fechaInicioSeguimiento,
+    fecha_probable_parto: input.fechaProbableParto || null,
+    fecha_nacimiento: input.fechaNacimiento || null,
     sexo: input.sexo,
   });
   if (error) throw new Error(error.message);
@@ -137,12 +145,27 @@ export async function crearHijo(input: { nombre: string; fechaNacimiento: string
   revalidatePath("/dashboard");
 }
 
-export async function actualizarHijo(id: string, input: { nombre: string; fechaNacimiento: string; sexo: string }) {
+export async function actualizarHijo(
+  id: string,
+  input: {
+    nombre: string;
+    fechaInicioSeguimiento: string;
+    fechaProbableParto?: string;
+    fechaNacimiento?: string;
+    sexo: string;
+  }
+) {
   const { familia } = await requireEditor();
   const supabase = await createClient();
   const { error } = await supabase
     .from("hijos")
-    .update({ nombre: input.nombre, fecha_nacimiento: input.fechaNacimiento, sexo: input.sexo })
+    .update({
+      nombre: input.nombre,
+      fecha_inicio_seguimiento: input.fechaInicioSeguimiento,
+      fecha_probable_parto: input.fechaProbableParto || null,
+      fecha_nacimiento: input.fechaNacimiento || null,
+      sexo: input.sexo,
+    })
     .eq("id", id)
     .eq("familia_id", familia.id);
   if (error) throw new Error(error.message);

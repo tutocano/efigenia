@@ -20,7 +20,7 @@ export default function GuidedQuestions({
   if (preguntas.length === 0) {
     return (
       <p className="text-xs text-slate-400">
-        No hay preguntas de categoría &quot;Bebé&quot; activas. Agrégalas en el Panel admin.
+        No hay preguntas activas para este momento. Agrégalas en Panel admin → Preguntas.
       </p>
     );
   }

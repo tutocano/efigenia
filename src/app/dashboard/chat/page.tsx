@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionContext } from "@/lib/familia";
 import { createClient } from "@/lib/supabase/server";
-import { getHijos, pickActiveChild, edadTexto } from "@/lib/hijos";
+import { getHijos, pickActiveChild, estadoTexto } from "@/lib/hijos";
 import ChatPanel, { type ChatMsg } from "@/components/ChatPanel";
 
 export default async function ChatPage({
@@ -40,7 +40,7 @@ export default async function ChatPage({
   return (
     <div>
       <div className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-100 dark:border-indigo-900 rounded-xl p-3 mb-3 text-[11px] text-indigo-700 dark:text-indigo-300 leading-relaxed">
-        Contexto activo: {hijo ? `${hijo.nombre}, ${edadTexto(hijo.fecha_nacimiento)}` : "sin hijo seleccionado"}
+        Contexto activo: {hijo ? `${hijo.nombre}, ${estadoTexto(hijo)}` : "sin hijo seleccionado"}
       </div>
       <ChatPanel hijoId={hijo?.id ?? null} mensajesIniciales={historial} />
     </div>

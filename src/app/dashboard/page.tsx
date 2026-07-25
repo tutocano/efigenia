@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getSessionContext } from "@/lib/familia";
 import { createClient } from "@/lib/supabase/server";
-import { getHijos, pickActiveChild, edadTexto } from "@/lib/hijos";
+import { getHijos, pickActiveChild, estaEnGestacion, estadoTexto } from "@/lib/hijos";
 import QuickActions from "@/components/QuickActions";
 import GuidedQuestions from "@/components/GuidedQuestions";
 import type { PreguntaDinamica } from "@/lib/supabase/types";
@@ -37,11 +37,14 @@ export default async function InicioPage({
     .order("hora_inicio", { ascending: false })
     .limit(6);
 
+  const gestacion = estaEnGestacion(hijo);
+  const categoriaPrincipal = gestacion ? "embarazo" : "bebe";
+
   const { data: preguntas } = await supabase
     .from("preguntas_dinamicas")
     .select("*")
     .eq("familia_id", familia.id)
-    .eq("categoria", "bebe")
+    .in("categoria", [categoriaPrincipal, "madre"])
     .eq("activa", true)
     .order("orden", { ascending: true });
 
@@ -53,7 +56,7 @@ export default async function InicioPage({
     <div className="space-y-4">
       <div className="bg-gradient-to-br from-indigo-500 to-violet-500 rounded-2xl p-4 text-white">
         <p className="text-xs opacity-80">
-          {hijo.nombre} · {edadTexto(hijo.fecha_nacimiento)}
+          {hijo.nombre} · {estadoTexto(hijo)}
         </p>
         <p className="text-sm mt-2 opacity-90">
           {registros?.length ?? 0} registro{registros?.length === 1 ? "" : "s"} reciente
@@ -70,7 +73,7 @@ export default async function InicioPage({
       {!isViewer && (
         <div>
           <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Acciones rápidas</p>
-          <QuickActions hijoId={hijo.id} preguntasRapidas={preguntasRapidas} />
+          <QuickActions hijoId={hijo.id} preguntasRapidas={preguntasRapidas} mostrarAccionesBebe={!gestacion} />
         </div>
       )}
 
