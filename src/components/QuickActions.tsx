@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { registrarActividad, guardarRespuestasGuiadas } from "@/app/dashboard/actions";
 import type { PreguntaDinamica, TipoRegistro } from "@/lib/supabase/types";
+import FotoCampo from "./FotoCampo";
 
 type Modal = "comida" | "panal" | "llanto" | "malestar" | null;
 
@@ -170,34 +171,43 @@ export default function QuickActions({
               {preguntaModal.icono ? `${preguntaModal.icono} ` : ""}
               {preguntaModal.texto}
             </p>
-            <div className="grid grid-cols-2 gap-2">
-              {preguntaModal.tipo_entrada === "toggle" ? (
-                <>
-                  <button
-                    onClick={() => responderPreguntaRapida(preguntaModal.id, "true")}
-                    className="py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-sm font-medium"
-                  >
-                    Sí
-                  </button>
-                  <button
-                    onClick={() => responderPreguntaRapida(preguntaModal.id, "false")}
-                    className="py-3 rounded-xl bg-rose-50 dark:bg-rose-950 text-sm font-medium"
-                  >
-                    No
-                  </button>
-                </>
-              ) : (
-                (preguntaModal.opciones ?? []).map((o) => (
-                  <button
-                    key={o}
-                    onClick={() => responderPreguntaRapida(preguntaModal.id, o)}
-                    className="py-3 rounded-xl bg-violet-50 dark:bg-violet-950 text-sm font-medium"
-                  >
-                    {o}
-                  </button>
-                ))
-              )}
-            </div>
+            {preguntaModal.tipo_entrada === "foto" ? (
+              <FotoCampo
+                valor=""
+                onChange={(url) => {
+                  if (url) responderPreguntaRapida(preguntaModal.id, url);
+                }}
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {preguntaModal.tipo_entrada === "toggle" ? (
+                  <>
+                    <button
+                      onClick={() => responderPreguntaRapida(preguntaModal.id, "true")}
+                      className="py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-sm font-medium"
+                    >
+                      Sí
+                    </button>
+                    <button
+                      onClick={() => responderPreguntaRapida(preguntaModal.id, "false")}
+                      className="py-3 rounded-xl bg-rose-50 dark:bg-rose-950 text-sm font-medium"
+                    >
+                      No
+                    </button>
+                  </>
+                ) : (
+                  (preguntaModal.opciones ?? []).map((o) => (
+                    <button
+                      key={o}
+                      onClick={() => responderPreguntaRapida(preguntaModal.id, o)}
+                      className="py-3 rounded-xl bg-violet-50 dark:bg-violet-950 text-sm font-medium"
+                    >
+                      {o}
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
             <button onClick={() => setPreguntaModal(null)} className="mt-3 w-full py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500">
               Cancelar
             </button>

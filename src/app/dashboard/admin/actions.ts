@@ -176,7 +176,8 @@ export async function crearPregunta(input: {
   const { familia } = await requireAdminDePreguntas();
   const supabase = await createClient();
   const esAccionRapida =
-    !!input.esAccionRapida && (input.tipoEntrada === "toggle" || input.tipoEntrada === "seleccion_unica");
+    !!input.esAccionRapida &&
+    (input.tipoEntrada === "toggle" || input.tipoEntrada === "seleccion_unica" || input.tipoEntrada === "foto");
   const { error } = await supabase.from("preguntas_dinamicas").insert({
     familia_id: familia.id,
     texto: input.texto,
@@ -210,7 +211,8 @@ export async function actualizarPregunta(
   const { familia } = await requireAdminDePreguntas();
   const supabase = await createClient();
   const esAccionRapida =
-    !!input.esAccionRapida && (input.tipoEntrada === "toggle" || input.tipoEntrada === "seleccion_unica");
+    !!input.esAccionRapida &&
+    (input.tipoEntrada === "toggle" || input.tipoEntrada === "seleccion_unica" || input.tipoEntrada === "foto");
   const { error } = await supabase
     .from("preguntas_dinamicas")
     .update({

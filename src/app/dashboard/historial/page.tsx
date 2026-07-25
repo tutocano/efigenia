@@ -37,6 +37,7 @@ interface ItemHistorial {
   icono: string;
   texto: string;
   autor: string | null;
+  fotoUrl?: string | null;
 }
 
 export default async function HistorialPage({
@@ -91,6 +92,7 @@ export default async function HistorialPage({
 
   const itemsRespuestas: ItemHistorial[] = (respuestas ?? []).map((r: any) => {
     const pregunta = r.preguntas_dinamicas;
+    const esFoto = pregunta?.tipo_entrada === "foto";
     const valor = pregunta?.tipo_entrada === "toggle" ? (r.valor === "true" ? "Sí" : "No") : r.valor;
     return {
       id: `respuesta-${r.id}`,
@@ -98,8 +100,9 @@ export default async function HistorialPage({
       rawId: r.id as string,
       momento: r.respondido_en ?? r.creado_en,
       icono: pregunta?.icono || "📝",
-      texto: `${pregunta?.texto ?? "Pregunta"}: ${valor}`,
+      texto: esFoto ? pregunta?.texto ?? "Foto" : `${pregunta?.texto ?? "Pregunta"}: ${valor}`,
       autor: r.miembros_familia?.nombre ?? null,
+      fotoUrl: esFoto ? r.valor : null,
     };
   });
 
@@ -153,6 +156,7 @@ export default async function HistorialPage({
                 momento={item.momento}
                 autor={item.autor}
                 canDelete={canDelete}
+                fotoUrl={item.fotoUrl}
               />
             ))}
           </div>

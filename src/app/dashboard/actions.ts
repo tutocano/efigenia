@@ -27,6 +27,36 @@ export async function registrarActividad(input: {
   revalidatePath("/dashboard");
 }
 
+// Sube una foto (ya comprimida en el cliente) al bucket "fotos-registros" y
+// devuelve su URL pública. Solo miembros con permiso "editor" pueden subir
+// (lo exige también la política de Storage, esto es un refuerzo temprano
+// para dar un mensaje de error claro en el formulario).
+export async function subirFotoRegistro(formData: FormData): Promise<string> {
+  const { familia } = await requireEditor();
+  const supabase = await createClient();
+
+  const archivo = formData.get("file");
+  if (!(archivo instanceof File)) {
+    throw new Error("No se recibió ninguna imagen.");
+  }
+  if (!["image/jpeg", "image/png", "image/webp"].includes(archivo.type)) {
+    throw new Error("Formato de imagen no permitido.");
+  }
+  if (archivo.size > 5 * 1024 * 1024) {
+    throw new Error("La imagen supera el máximo de 5 MB.");
+  }
+
+  const nombre = `${familia.id}/${crypto.randomUUID()}.jpg`;
+  const { error } = await supabase.storage.from("fotos-registros").upload(nombre, archivo, {
+    contentType: archivo.type,
+    upsert: false,
+  });
+  if (error) throw new Error(error.message);
+
+  const { data } = supabase.storage.from("fotos-registros").getPublicUrl(nombre);
+  return data.publicUrl;
+}
+
 export async function eliminarRegistro(id: string) {
   const { familia } = await requireEditor();
   const supabase = await createClient();

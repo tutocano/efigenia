@@ -6,7 +6,7 @@
 export type RolFamiliar = "padre_madre_1" | "padre_madre_2" | "cuidador" | "familiar" | "superadmin";
 export type PermisoFamiliar = "editor" | "lector";
 export type CategoriaPregunta = "bebe" | "padre_madre_1" | "padre_madre_2" | "general";
-export type TipoEntrada = "texto" | "toggle" | "seleccion_unica" | "numero" | "timer" | "escala_1_5";
+export type TipoEntrada = "texto" | "toggle" | "seleccion_unica" | "numero" | "timer" | "escala_1_5" | "foto";
 export type TipoRegistro = "sueno" | "alimentacion" | "panal" | "salud" | "animo";
 
 export interface Familia {
@@ -131,6 +131,7 @@ export const tipoEntradaLabels: Record<TipoEntrada, string> = {
   numero: "Número",
   timer: "Timer/Duración (min)",
   escala_1_5: "Escala 1-5",
+  foto: "Foto",
 };
 
 export function permisoDeRol(rol: RolFamiliar): PermisoFamiliar {

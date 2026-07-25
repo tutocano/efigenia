@@ -1,6 +1,7 @@
 "use client";
 
 import type { PreguntaDinamica } from "@/lib/supabase/types";
+import FotoCampo from "./FotoCampo";
 
 export default function PreguntaCampo({
   pregunta,
@@ -77,6 +78,8 @@ export default function PreguntaCampo({
           ))}
         </div>
       );
+    case "foto":
+      return <FotoCampo valor={valor} onChange={onChange} />;
     default:
       return null;
   }

@@ -128,7 +128,7 @@ function PreguntaForm({
   const [orden, setOrden] = useState(inicial?.orden ?? siguienteOrden);
   const [icono, setIcono] = useState(inicial?.icono ?? "");
   const [esAccionRapida, setEsAccionRapida] = useState(inicial?.es_accion_rapida ?? false);
-  const puedeSerAccionRapida = tipoEntrada === "toggle" || tipoEntrada === "seleccion_unica";
+  const puedeSerAccionRapida = tipoEntrada === "toggle" || tipoEntrada === "seleccion_unica" || tipoEntrada === "foto";
 
   return (
     <div className="space-y-2 text-sm">
@@ -150,12 +150,19 @@ function PreguntaForm({
           <option key={k} value={k}>{label}</option>
         ))}
       </select>
-      <input
-        value={opciones}
-        onChange={(e) => setOpciones(e.target.value)}
-        placeholder="Opciones separadas por coma (solo selección única)"
-        className="w-full rounded-lg px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
-      />
+      {tipoEntrada === "seleccion_unica" && (
+        <input
+          value={opciones}
+          onChange={(e) => setOpciones(e.target.value)}
+          placeholder="Opciones separadas por coma"
+          className="w-full rounded-lg px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs"
+        />
+      )}
+      {tipoEntrada === "foto" && (
+        <p className="text-[10px] text-slate-400">
+          No requiere configuración adicional: el usuario podrá tomar o elegir una foto al responder.
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={obligatoria} onChange={(e) => setObligatoria(e.target.checked)} /> Obligatoria
