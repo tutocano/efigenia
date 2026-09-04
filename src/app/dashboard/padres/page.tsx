@@ -36,6 +36,8 @@ export default async function PadresPage() {
         .order("orden", { ascending: true }),
     ]);
 
+  const otrosMiembros = (miembros ?? []).filter((m) => m.id !== miembro.id);
+
   return (
     <div className="space-y-4">
       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Cuidado de los cuidadores</p>
@@ -61,10 +63,17 @@ export default async function PadresPage() {
 
       <div>
         <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Estado de hoy de toda la familia</p>
-        <div className="space-y-2">
-          {(miembros ?? [])
-            .filter((m) => m.id !== miembro.id)
-            .map((m) => {
+        {otrosMiembros.length === 0 ? (
+          <div className="text-center py-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+            <p className="text-2xl mb-1">🧑‍🧑‍🧒</p>
+            <p className="text-xs text-slate-400">
+              Todavía eres el único con permiso de editar en la familia — cuando agregues más cuidadores desde
+              Admin, aquí verás cómo están cada día.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {otrosMiembros.map((m) => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const registro = (bienestarHoy as any[] | null)?.find((b) => b.miembro_id === m.id);
               return (
@@ -84,7 +93,8 @@ export default async function PadresPage() {
                 </div>
               );
             })}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

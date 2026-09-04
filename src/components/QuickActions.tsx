@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { registrarActividad, guardarRespuestasGuiadas } from "@/app/dashboard/actions";
 import type { PreguntaDinamica, TipoRegistro } from "@/lib/supabase/types";
-import FotoCampo from "./FotoCampo";
 
 type Modal = "comida" | "panal" | "llanto" | "malestar" | null;
 
@@ -14,24 +13,31 @@ export default function QuickActions({
 }: {
   hijoId: string;
   preguntasRapidas?: PreguntaDinamica[];
-  // false mientras el hijo está en gestación: las 6 acciones fijas de bebé
-  // (siesta, comida, pañal, llanto, malestar, juego) no aplican todavía.
-  // Las acciones de embarazo/madre llegan como preguntasRapidas dinámicas.
   mostrarAccionesBebe?: boolean;
 }) {
   const [siestaStart, setSiestaStart] = useState<number | null>(null);
   const [modal, setModal] = useState<Modal>(null);
   const [preguntaModal, setPreguntaModal] = useState<PreguntaDinamica | null>(null);
   const [pending, startTransition] = useTransition();
+  const [confirmacion, setConfirmacion] = useState<string | null>(null);
+
+  function mostrarConfirmacion(mensaje: string) {
+    setConfirmacion(mensaje);
+    setTimeout(() => setConfirmacion(null), 2000);
+  }
 
   function responderPreguntaRapida(preguntaId: string, valor: string) {
-    startTransition(() => {
-      guardarRespuestasGuiadas(hijoId, [{ preguntaId, valor }]);
+    startTransition(async () => {
+      await guardarRespuestasGuiadas(hijoId, [{ preguntaId, valor }]);
+      mostrarConfirmacion("¡Guardado!");
     });
     setPreguntaModal(null);
   }
 
   function tocarPreguntaRapida(p: PreguntaDinamica) {
+    // Siempre abre el mini menú para elegir la respuesta (Sí/No, o la
+    // opción correspondiente) — así no se guarda "Sí" de una vez sin que
+    // la persona haya elegido nada.
     setPreguntaModal(p);
   }
 
@@ -43,20 +49,22 @@ export default function QuickActions({
     const minutos = Math.max(1, Math.round((Date.now() - siestaStart) / 60000));
     const inicio = new Date(siestaStart).toISOString();
     setSiestaStart(null);
-    startTransition(() => {
-      registrarActividad({
+    startTransition(async () => {
+      await registrarActividad({
         hijoId,
         tipo: "sueno",
         detalle: { duracion_minutos: minutos },
         horaInicio: inicio,
         horaFin: new Date().toISOString(),
       });
+      mostrarConfirmacion("¡Siesta guardada!");
     });
   }
 
   function log(tipo: TipoRegistro, detalle: Record<string, unknown>) {
-    startTransition(() => {
-      registrarActividad({ hijoId, tipo, detalle });
+    startTransition(async () => {
+      await registrarActividad({ hijoId, tipo, detalle });
+      mostrarConfirmacion("¡Guardado!");
     });
     setModal(null);
   }
@@ -120,12 +128,6 @@ export default function QuickActions({
           </button>
         ))}
       </div>
-      {!mostrarAccionesBebe && preguntasRapidas.length === 0 && (
-        <p className="text-xs text-slate-400 mt-2">
-          Todavía no hay acciones rápidas de embarazo configuradas. Agrégalas en Panel admin → Preguntas
-          (categoría &quot;Embarazo&quot;, marcadas como acción rápida).
-        </p>
-      )}
 
       {modal && (
         <div
@@ -186,43 +188,34 @@ export default function QuickActions({
               {preguntaModal.icono ? `${preguntaModal.icono} ` : ""}
               {preguntaModal.texto}
             </p>
-            {preguntaModal.tipo_entrada === "foto" ? (
-              <FotoCampo
-                valor=""
-                onChange={(url) => {
-                  if (url) responderPreguntaRapida(preguntaModal.id, url);
-                }}
-              />
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {preguntaModal.tipo_entrada === "toggle" ? (
-                  <>
-                    <button
-                      onClick={() => responderPreguntaRapida(preguntaModal.id, "true")}
-                      className="py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-sm font-medium"
-                    >
-                      Sí
-                    </button>
-                    <button
-                      onClick={() => responderPreguntaRapida(preguntaModal.id, "false")}
-                      className="py-3 rounded-xl bg-rose-50 dark:bg-rose-950 text-sm font-medium"
-                    >
-                      No
-                    </button>
-                  </>
-                ) : (
-                  (preguntaModal.opciones ?? []).map((o) => (
-                    <button
-                      key={o}
-                      onClick={() => responderPreguntaRapida(preguntaModal.id, o)}
-                      className="py-3 rounded-xl bg-violet-50 dark:bg-violet-950 text-sm font-medium"
-                    >
-                      {o}
-                    </button>
-                  ))
-                )}
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2">
+              {preguntaModal.tipo_entrada === "toggle" ? (
+                <>
+                  <button
+                    onClick={() => responderPreguntaRapida(preguntaModal.id, "true")}
+                    className="py-3 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-sm font-medium"
+                  >
+                    Sí
+                  </button>
+                  <button
+                    onClick={() => responderPreguntaRapida(preguntaModal.id, "false")}
+                    className="py-3 rounded-xl bg-rose-50 dark:bg-rose-950 text-sm font-medium"
+                  >
+                    No
+                  </button>
+                </>
+              ) : (
+                (preguntaModal.opciones ?? []).map((o) => (
+                  <button
+                    key={o}
+                    onClick={() => responderPreguntaRapida(preguntaModal.id, o)}
+                    className="py-3 rounded-xl bg-violet-50 dark:bg-violet-950 text-sm font-medium"
+                  >
+                    {o}
+                  </button>
+                ))
+              )}
+            </div>
             <button onClick={() => setPreguntaModal(null)} className="mt-3 w-full py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm text-slate-500">
               Cancelar
             </button>
@@ -230,6 +223,9 @@ export default function QuickActions({
         </div>
       )}
       {pending && <p className="text-[11px] text-slate-400 mt-2">Guardando…</p>}
+      {confirmacion && !pending && (
+        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-2 font-medium">✅ {confirmacion}</p>
+      )}
     </div>
   );
 }

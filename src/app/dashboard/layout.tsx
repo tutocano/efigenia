@@ -4,6 +4,7 @@ import { getHijos } from "@/lib/hijos";
 import { logout } from "@/app/login/actions";
 import { rolLabels } from "@/lib/supabase/types";
 import { SidebarNavLink, BottomNavLink } from "@/components/NavLink";
+import IdleLogout from "@/components/IdleLogout";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { miembro, familia } = await getSessionContext();
@@ -17,10 +18,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
     { href: "/dashboard/semana", label: "Semana", icon: "📊" },
     ...(isViewer ? [] : [{ href: "/dashboard/chat", label: "Chat IA", icon: "💬" }]),
     { href: "/dashboard/admin", label: "Admin", icon: "⚙️" },
+        { href: "/dashboard/ayuda", label: "Ayuda", icon: "❓" },
   ];
 
   return (
     <div className="min-h-dvh md:flex">
+      <IdleLogout />
       {/* Sidebar desktop */}
       <aside className="hidden md:flex md:flex-col md:w-56 md:shrink-0 md:border-r md:border-slate-200 md:dark:border-slate-800 md:bg-white md:dark:bg-slate-900 md:p-4 md:gap-1">
         <div className="mb-4">

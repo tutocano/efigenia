@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireEditor } from "@/lib/familia";
 import type { TipoRegistro } from "@/lib/supabase/types";
+import { GoogleGenAI } from "@google/genai";
+
+const gemini = process.env.GEMINI_API_KEY
+  ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+  : null;
 
 export async function registrarActividad(input: {
   hijoId: string;
@@ -27,10 +32,6 @@ export async function registrarActividad(input: {
   revalidatePath("/dashboard");
 }
 
-// Sube una foto (ya comprimida en el cliente) al bucket "fotos-registros" y
-// devuelve su URL pública. Solo miembros con permiso "editor" pueden subir
-// (lo exige también la política de Storage, esto es un refuerzo temprano
-// para dar un mensaje de error claro en el formulario).
 export async function subirFotoRegistro(formData: FormData): Promise<string> {
   const { familia } = await requireEditor();
   const supabase = await createClient();
@@ -91,8 +92,6 @@ export async function guardarRespuestasGuiadas(
       hijo_id: hijoId,
       miembro_id: miembro.id,
       valor: r.valor,
-      // Si el usuario no eligió una hora específica (doble clic / mantener
-      // presionado sobre la pregunta), se guarda con la hora actual.
       respondido_en: r.respondidoEn || new Date().toISOString(),
     }));
   if (rows.length === 0) return;
@@ -126,7 +125,7 @@ export async function guardarBienestar(input: {
     { onConflict: "miembro_id,fecha" }
   );
   if (error) throw new Error(error.message);
-  revalidatePath("/dashboard/padres");
+    revalidatePath("/dashboard/padres");
 }
 
 export async function enviarMensajeChat(hijoId: string | null, contenido: string): Promise<string> {
@@ -141,7 +140,7 @@ export async function enviarMensajeChat(hijoId: string | null, contenido: string
     contenido,
   });
 
-  const respuesta = generarRespuestaIA(contenido);
+  const respuesta = await generarRespuestaIA(contenido);
 
   await supabase.from("mensajes_chat_ia").insert({
     familia_id: familia.id,
@@ -154,11 +153,55 @@ export async function enviarMensajeChat(hijoId: string | null, contenido: string
   return respuesta;
 }
 
-// Respuesta simulada: útil para probar el flujo sin depender de una API key.
-// Para conectar un modelo real, sustituye este cuerpo por una llamada a la
-// API de Claude (u otro proveedor) usando una variable de entorno server-only
-// (nunca expongas la API key al cliente).
-function generarRespuestaIA(texto: string): string {
+// Borra todo el historial del Chat IA para el hijo actual (o el chat "sin
+// hijo seleccionado" si hijoId es null). Solo usuarios con permiso editor.
+export async function vaciarChatIA(hijoId: string | null) {
+  const { familia } = await requireEditor();
+  const supabase = await createClient();
+  let query = supabase.from("mensajes_chat_ia").delete().eq("familia_id", familia.id);
+  query = hijoId ? query.eq("hijo_id", hijoId) : query.is("hijo_id", null);
+  const { error } = await query;
+  if (error) throw new Error(error.message);
+  revalidatePath("/dashboard/chat");
+}
+
+async function generarRespuestaIA(texto: string): Promise<string> {
+  const respaldo = generarRespuestaRespaldo(texto);
+
+  if (gemini) {
+    try {
+      const resultado = await gemini.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text:
+                  "Eres el asistente de Efigenia, una app familiar de seguimiento de embarazo y del bebé. " +
+                  "Ya existe esta respuesta base preparada de antemano para este tipo de consulta:\n\"" +
+                  respaldo +
+                  "\"\n\n" +
+                  "Complementa esa respuesta base con información adicional útil — no la repitas literalmente, agrega valor. " +
+                  "Responde en español, de forma breve, cálida y práctica (máximo 4-5 líneas). " +
+                  "Nunca des diagnósticos ni indiques dosis de medicamentos.\n\n" +
+                  "Mensaje de la familia: " + texto,
+              },
+            ],
+          },
+        ],
+      });
+      const textoIA = resultado.text?.trim();
+      if (textoIA) return respaldo + "\n\nUn poco más (IA): " + textoIA;
+    } catch (error) {
+      console.error("Gemini no respondió, usando respaldo:", error);
+      return respaldo + "\n\n⚠️ No pude conectarme con la IA en este momento, así que te dejo la orientación general de arriba.";
+    }
+  }
+  return respaldo;
+}
+
+function generarRespuestaRespaldo(texto: string): string {
   const t = texto.toLowerCase();
   const disclaimer = " Recuerda que esto no reemplaza una consulta con el pediatra.";
   if (t.includes("cólico") || t.includes("colico")) {

@@ -61,6 +61,16 @@ export default function LoginPage() {
             Regístrala aquí
           </Link>
         </p>
+        <p className="text-xs text-slate-400 text-center mt-2">
+          <a
+            href="https://www.youtube.com/watch?v=5-5Xj6laZAM"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-600 dark:text-indigo-400 font-medium"
+          >
+            🎬 ¿Cómo funciona Efigenia? Ver video
+          </a>
+        </p>
       </div>
     </main>
   );

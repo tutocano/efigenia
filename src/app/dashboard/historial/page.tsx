@@ -181,7 +181,19 @@ export default async function HistorialPage({
       ))}
 
       {items.length === 0 && (
-        <p className="text-xs text-slate-400">Todavía no hay nada registrado para {hijo.nombre}.</p>
+        <div className="text-center py-10 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+          <p className="text-3xl mb-2">📜</p>
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+            Todavía no hay nada registrado para {hijo.nombre}
+          </p>
+          <p className="text-xs text-slate-400 mt-1">
+            Ve a{" "}
+            <Link href="/dashboard" className="text-indigo-600 dark:text-indigo-400 font-medium">
+              Inicio
+            </Link>{" "}
+            y registra la primera actividad — aparecerá aquí al instante.
+          </p>
+        </div>
       )}
     </div>
   );
